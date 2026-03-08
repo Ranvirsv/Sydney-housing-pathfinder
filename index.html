@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sydney Student Housing Pathfinder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border-radius: 1rem;
+        }
+
+        /* Segmented Controls */
+        .segmented-control {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .segmented-control button {
+            flex: 1;
+            padding: 6px 4px;
+            font-size: 0.70rem;
+            font-weight: 600;
+            color: #64748b;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+        }
+
+        .segmented-control button:hover:not(.active) {
+            color: #334155;
+            background: rgba(226, 232, 240, 0.5);
+        }
+
+        .segmented-control button.active {
+            background: white;
+            color: #0f172a;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+            margin: 10px 0;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        .scroller::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scroller::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .scroller::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body class="antialiased p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <header class="glass-card p-6 md:p-8">
+            <div
+                class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-4 mb-4">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">Sydney Housing Algorithm
+                    </h1>
+                    <p class="text-slate-500 mt-1">Interactive decision engine for finding the perfect suburb</p>
+                </div>
+                <div
+                    class="mt-4 md:mt-0 px-4 py-2 bg-blue-50 text-blue-700 font-semibold rounded-lg border border-blue-100 shadow-sm text-sm flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    Live Calculation Active
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <h2 class="text-[1.1rem] font-semibold text-slate-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Strategic Advisory: Initial Relocation
+                </h2>
+                <p class="text-slate-600 text-sm mt-2 mb-4 leading-relaxed max-w-3xl">
+                    The Sydney residential leasing market operates with high velocity and intensive competition. We
+                    strongly advise securing temporary accommodation upon arrival to facilitate mandatory in-person
+                    property inspections. Utilize the algorithmic model below to identify high-probability target
+                    suburbs that mathematically align with your inputted baseline rent parameter of $<span
+                        id="strategy-rent-display">350</span>/wk.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div
+                    class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="font-bold text-slate-800 text-sm mb-1.5 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                            </path>
+                        </svg>
+                        Market Dynamics
+                    </div>
+                    <div class="text-xs text-slate-600 leading-relaxed">Securing private leases in CBD-adjacent
+                        precincts (e.g., Surry Hills, Newtown) under standard budget constraints presents low
+                        statistical probability. The model prioritizes optimizing transit corridors (T1, T2, T4, Metro)
+                        to maximize spatial yield.</div>
+                </div>
+                <div
+                    class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="font-bold text-slate-800 text-sm mb-1.5 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                            </path>
+                        </svg>
+                        Occupancy Metrics
+                    </div>
+                    <div class="text-xs text-slate-600 leading-relaxed">Highly favorable roommate-to-bathroom ratios
+                        command premium pricing tiers. Constrained budgets typically necessitate shared facilities in
+                        established high-density residential zones.</div>
+                </div>
+                <div
+                    class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="font-bold text-slate-800 text-sm mb-1.5 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7">
+                            </path>
+                        </svg>
+                        Transit Heuristics
+                    </div>
+                    <div class="text-xs text-slate-600 leading-relaxed">The algorithm isolates suburbs featuring direct
+                        heavy-rail logic to the primary destination centroid, systematically eliminating routes relying
+                        on asynchronous bus transfers to maintain commute integrity.</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <div class="lg:col-span-4 glass-card p-6 flex flex-col h-full border-t-4 border-t-blue-600">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 mb-4">Input Parameters
+                    </h2>
+                </div>
+
+                <div class="space-y-5 flex-grow">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">University Location
+                            (Centroid)</label>
+                        <select id="centroid"
+                            class="w-full bg-slate-50 border border-slate-300 text-slate-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium">
+                            <option value="usyd">USYD / UTS (Central Station)</option>
+                            <option value="unsw">UNSW (Randwick / Kingsford)</option>
+                            <option value="macquarie">Macquarie University</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-semibold text-slate-700">Target Ideal Rent (Per Week)</label>
+                            <span id="val-target-rent"
+                                class="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">$350</span>
+                        </div>
+                        <input type="range" id="param-target-rent" min="200" max="600" value="350" step="10">
+                        <div class="text-[10px] text-slate-400 text-right">Rent scoring metric</div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-semibold text-slate-700">Max Commute Time Limit</label>
+                            <span id="val-time"
+                                class="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">45 mins</span>
+                        </div>
+                        <input type="range" id="param-time" min="15" max="60" value="45" step="5">
+                        <div class="text-[10px] text-slate-400 text-right">Absolute cutoff threshold</div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 space-y-5">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Priority Weights</label>
+
+                        <div>
+                            <div class="text-xs font-semibold text-slate-700 mb-1.5">Budget Strictness</div>
+                            <div class="segmented-control" data-param="w-budget">
+                                <button data-val="0">Ignored</button>
+                                <button data-val="40">Low</button>
+                                <button data-val="80" class="active">High</button>
+                                <button data-val="100">Dealbreaker</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-semibold text-slate-700 mb-1.5">Commute Speed</div>
+                            <div class="segmented-control" data-param="w-commute">
+                                <button data-val="0">Ignored</button>
+                                <button data-val="40">Low</button>
+                                <button data-val="80" class="active">High</button>
+                                <button data-val="100">Dealbreaker</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-semibold text-slate-700 mb-1.5">Safety / Late Night Travel</div>
+                            <div class="segmented-control" data-param="w-safety">
+                                <button data-val="0">Ignored</button>
+                                <button data-val="40">Low</button>
+                                <button data-val="80">High</button>
+                                <button data-val="100" class="active">Dealbreaker</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-semibold text-slate-700 mb-1.5">Vibe / Culture</div>
+                            <div class="segmented-control" data-param="w-vibe">
+                                <button data-val="0">Ignored</button>
+                                <button data-val="40" class="active">Low</button>
+                                <button data-val="80">High</button>
+                                <button data-val="100">Dealbreaker</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 glass-card p-6 flex flex-col h-[500px] lg:h-auto min-h-[500px]">
+                <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
+                    <h2 class="text-lg font-bold text-slate-800">Spatial Proximity Visualization</h2>
+                    <span
+                        class="text-[10px] uppercase tracking-wider font-bold bg-slate-800 text-white px-2.5 py-1 rounded-full shadow-sm">
+                        WebGL Active
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mb-4 leading-relaxed mt-2">
+                    Visualizing geometric compliance based on current constraint variables. Nodes in <span
+                        class="font-semibold text-emerald-600">green</span> satisfy the minimum gating criteria, scaling
+                    geometrically relative to their aggregate score. Nodes in <span
+                        class="font-semibold text-red-500">red</span> indicate categorical failures. <strong>Click any
+                        listing in the index below to isolate its geospatial coordinate.</strong>
+                </p>
+                <div id="map-container" class="w-full flex-grow rounded-lg overflow-hidden border border-slate-200"
+                    style="background-color: #e2e8f0;"></div>
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <div class="glass-card p-6 flex flex-col max-h-[500px]">
+                <div class="flex justify-between items-end mb-4 border-b border-slate-100 pb-2">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Optimized Suburb Index</h2>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                            <strong class="text-blue-600 font-medium hover:underline cursor-pointer">Select a
+                                row</strong> to generate a granular performance breakdown.
+                        </p>
+                    </div>
+                    <div>
+                        <select id="sort-metric"
+                            class="bg-slate-50 border border-slate-300 text-slate-700 rounded-md py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs font-medium">
+                            <option value="score">Sort by: Best Match</option>
+                            <option value="rent">Sort by: Cheapest Rent</option>
+                            <option value="time">Sort by: Fastest Commute</option>
+                            <option value="safety">Sort by: Safest</option>
+                            <option value="vibe">Sort by: Best Vibe/Night life</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="results-list" class="flex-grow overflow-y-auto scroller space-y-3 pr-2 pb-2">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div class="glass-card p-6 flex flex-col">
+                <div class="border-b border-slate-100 pb-2 mb-4">
+                    <h2 class="text-lg font-bold text-slate-800" id="radar-title">Multivariate Trade-off Analysis (Top
+                        3)</h2>
+                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Comparative visualization of composite metrics across the highest-yielding nodes. Expanding the
+                        geometric footprint signifies greater adherence to ideal theoretical baselines.
+                    </p>
+                </div>
+                <div class="flex-grow flex items-center justify-center">
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const universities = {
+            usyd: { name: 'USYD/UTS', lat: -33.8833, lon: 151.2000 },
+            unsw: { name: 'UNSW', lat: -33.9173, lon: 151.2313 },
+            macquarie: { name: 'Macquarie Uni', lat: -33.7738, lon: 151.1126 }
+        };
+
+        const suburbData = [
+            // --- Inner West & City Fringe (High Vibe, High Rent, Excellent Commute) ---
+            { id: 'newtown', name: 'Newtown', lat: -33.8988, lon: 151.1784, rent: 420, safety: 75, vibe: 95, line: 'T2 Inner West', times: { usyd: 8, unsw: 25, macquarie: 50 } },
+            { id: 'surry_hills', name: 'Surry Hills', lat: -33.8861, lon: 151.2111, rent: 450, safety: 80, vibe: 95, line: 'Walk / Light Rail', times: { usyd: 5, unsw: 20, macquarie: 45 } },
+            { id: 'glebe', name: 'Glebe', lat: -33.8795, lon: 151.1855, rent: 400, safety: 75, vibe: 90, line: 'Light Rail / Bus', times: { usyd: 10, unsw: 30, macquarie: 55 } },
+            { id: 'petersham', name: 'Petersham', lat: -33.8961, lon: 151.1553, rent: 370, safety: 80, vibe: 85, line: 'T2 Inner West', times: { usyd: 12, unsw: 35, macquarie: 50 } },
+            { id: 'stanmore', name: 'Stanmore', lat: -33.8950, lon: 151.1633, rent: 360, safety: 80, vibe: 80, line: 'T2 Inner West', times: { usyd: 10, unsw: 35, macquarie: 52 } },
+
+            // --- Inner West Hubs (Balanced Budget, Good Night Safety, Fast Commute) ---
+            { id: 'ashfield', name: 'Ashfield', lat: -33.8890, lon: 151.1255, rent: 340, safety: 75, vibe: 65, line: 'T2 / T9', times: { usyd: 15, unsw: 40, macquarie: 45 } },
+            { id: 'strathfield', name: 'Strathfield', lat: -33.8708, lon: 151.0960, rent: 350, safety: 85, vibe: 65, line: 'T1/T2/T9 Hub', times: { usyd: 15, unsw: 45, macquarie: 35 } },
+            { id: 'burwood', name: 'Burwood', lat: -33.8775, lon: 151.1038, rent: 350, safety: 80, vibe: 75, line: 'T2 / T9', times: { usyd: 18, unsw: 45, macquarie: 40 } },
+            { id: 'dulwich_hill', name: 'Dulwich Hill', lat: -33.9110, lon: 151.1408, rent: 350, safety: 85, vibe: 75, line: 'T3 / Light Rail', times: { usyd: 22, unsw: 40, macquarie: 60 } },
+
+            // --- Northern & North-Western (Premium Night Safety, Solid Commute, Moderate/High Rent) ---
+            { id: 'north_sydney', name: 'North Sydney', lat: -33.8390, lon: 151.2070, rent: 440, safety: 95, vibe: 80, line: 'T1 North Shore', times: { usyd: 15, unsw: 40, macquarie: 30 } },
+            { id: 'chatswood', name: 'Chatswood', lat: -33.7961, lon: 151.1831, rent: 380, safety: 90, vibe: 85, line: 'T1 / Metro', times: { usyd: 25, unsw: 50, macquarie: 15 } },
+            { id: 'epping', name: 'Epping', lat: -33.7744, lon: 151.0822, rent: 330, safety: 90, vibe: 50, line: 'Metro / T9', times: { usyd: 35, unsw: 65, macquarie: 10 } },
+            { id: 'eastwood', name: 'Eastwood', lat: -33.7900, lon: 151.0800, rent: 320, safety: 85, vibe: 70, line: 'T9 Northern', times: { usyd: 35, unsw: 60, macquarie: 15 } },
+            { id: 'ryde', name: 'Ryde', lat: -33.8150, lon: 151.1080, rent: 330, safety: 80, vibe: 60, line: 'Bus Hub', times: { usyd: 40, unsw: 65, macquarie: 15 } },
+            { id: 'macquarie_park', name: 'Macquarie Park', lat: -33.7797, lon: 151.1250, rent: 360, safety: 85, vibe: 60, line: 'Metro', times: { usyd: 40, unsw: 70, macquarie: 5 } },
+            { id: 'rhodes', name: 'Rhodes', lat: -33.8300, lon: 151.0860, rent: 390, safety: 90, vibe: 70, line: 'T9 Northern', times: { usyd: 25, unsw: 50, macquarie: 20 } },
+
+            // --- South & Airport Line (Fast Commute, Mixed Night Safety, High Density) ---
+            { id: 'sydenham', name: 'Sydenham', lat: -33.9167, lon: 151.1667, rent: 340, safety: 70, vibe: 70, line: 'T3/T4/T8', times: { usyd: 12, unsw: 35, macquarie: 55 } },
+            { id: 'wolli_creek', name: 'Wolli Creek', lat: -33.9290, lon: 151.1530, rent: 380, safety: 80, vibe: 65, line: 'T4/T8 Hub', times: { usyd: 15, unsw: 35, macquarie: 55 } },
+            { id: 'rockdale', name: 'Rockdale', lat: -33.9531, lon: 151.1396, rent: 310, safety: 75, vibe: 55, line: 'T4 Illawarra', times: { usyd: 22, unsw: 40, macquarie: 65 } },
+            { id: 'hurstville', name: 'Hurstville', lat: -33.9667, lon: 151.1000, rent: 290, safety: 75, vibe: 70, line: 'T4 Illawarra', times: { usyd: 28, unsw: 45, macquarie: 70 } },
+
+            // --- West & South-West (Budget Friendly, Longer Commutes, Lower Night Safety) ---
+            { id: 'campsie', name: 'Campsie', lat: -33.9108, lon: 151.1042, rent: 280, safety: 65, vibe: 60, line: 'T3 Bankstown', times: { usyd: 28, unsw: 45, macquarie: 60 } },
+            { id: 'bankstown', name: 'Bankstown', lat: -33.9173, lon: 151.0352, rent: 260, safety: 55, vibe: 50, line: 'T3 / Metro', times: { usyd: 38, unsw: 55, macquarie: 65 } },
+            { id: 'lidcombe', name: 'Lidcombe', lat: -33.8631, lon: 151.0453, rent: 290, safety: 65, vibe: 45, line: 'T1/T2/T3 Hub', times: { usyd: 28, unsw: 55, macquarie: 45 } },
+            { id: 'parramatta', name: 'Parramatta', lat: -33.8150, lon: 151.0011, rent: 310, safety: 70, vibe: 80, line: 'T1/T5', times: { usyd: 35, unsw: 65, macquarie: 50 } }
+        ];
+
+        let radarChartInstance = null;
+        let selectedSuburbId = null;
+
+        function syncLabels() {
+            const targetRent = parseInt(document.getElementById('param-target-rent').value);
+
+            const headerRentDisplay = document.getElementById('header-rent-display');
+            if (headerRentDisplay) headerRentDisplay.innerText = targetRent;
+
+            const strategyRentDisplay = document.getElementById('strategy-rent-display');
+            if (strategyRentDisplay) strategyRentDisplay.innerText = targetRent;
+
+            const targetRentLabel = document.getElementById('val-target-rent');
+            if (targetRentLabel) targetRentLabel.innerText = '$' + targetRent;
+
+            document.getElementById('val-time').innerText = document.getElementById('param-time').value + ' mins';
+        }
+
+        function getSegmentedVal(paramName) {
+            const activeBtn = document.querySelector(`.segmented-control[data-param="${paramName}"] button.active`);
+            return activeBtn ? parseInt(activeBtn.dataset.val) : 50;
+        }
+
+        function processData() {
+            const uniKey = document.getElementById('centroid').value;
+            const targetRent = parseInt(document.getElementById('param-target-rent').value);
+            const maxTime = parseInt(document.getElementById('param-time').value);
+
+            const wBudget = getSegmentedVal('w-budget');
+            const wCommute = getSegmentedVal('w-commute');
+            const wSafety = getSegmentedVal('w-safety');
+            const wVibe = getSegmentedVal('w-vibe');
+
+            const totalWeight = (wBudget + wCommute + wSafety + wVibe) || 1;
+
+            let processed = suburbData.map(sub => {
+                const commuteTime = sub.times[uniKey];
+
+                // Affordability: 50 points if rent == target. 0 points if 20% over target. 100 points if 20% under target.
+                const rentBuffer = Math.max(50, targetRent * 0.2);
+                let b_score = Math.max(0, Math.min(100, 50 + ((targetRent - sub.rent) / rentBuffer) * 50));
+
+                // Commute Speed: 100 points if <= 15 mins. Scales down to 0 points at maxTime slider limit.
+                let c_score = 100;
+                if (commuteTime > 15) {
+                    c_score = 100 - ((commuteTime - 15) / Math.max(1, maxTime - 15)) * 100;
+                }
+                c_score = Math.max(0, Math.min(100, c_score));
+
+                let s_score = sub.safety;
+                let v_score = sub.vibe;
+
+                let isDisqualified = false;
+                let penalty = 0;
+
+                if (commuteTime > maxTime) {
+                    penalty += 500;
+                    isDisqualified = true;
+                }
+
+                if (sub.rent > targetRent + 30 && wBudget > 70) {
+                    penalty += 200;
+                    isDisqualified = true;
+                }
+
+                const rawScore = (
+                    (b_score * (wBudget / totalWeight)) +
+                    (c_score * (wCommute / totalWeight)) +
+                    (s_score * (wSafety / totalWeight)) +
+                    (v_score * (wVibe / totalWeight))
+                );
+
+                const finalScore = Math.max(0, rawScore - penalty);
+
+                return {
+                    ...sub,
+                    commuteTime,
+                    b_score,
+                    c_score,
+                    s_score,
+                    v_score,
+                    finalScore,
+                    isDisqualified
+                };
+            });
+
+            processed.sort((a, b) => b.finalScore - a.finalScore);
+            return processed;
+        }
+
+        window.toggleSuburb = function (id) {
+            if (selectedSuburbId === id) {
+                selectedSuburbId = null;
+            } else {
+                selectedSuburbId = id;
+            }
+            updateApp(false);
+        };
+
+        function getSortedData(data) {
+            const sortBy = document.getElementById('sort-metric').value;
+            let sorted = [...data]; // Create a copy so we don't mutate original array
+
+            if (sortBy === 'rent') {
+                sorted.sort((a, b) => a.rent - b.rent);
+            } else if (sortBy === 'time') {
+                sorted.sort((a, b) => a.commuteTime - b.commuteTime);
+            } else if (sortBy === 'safety') {
+                sorted.sort((a, b) => b.safety - a.safety);
+            } else if (sortBy === 'vibe') {
+                sorted.sort((a, b) => b.vibe - a.vibe);
+            }
+            // default is 'score' which is already sorted by processData
+            return sorted;
+        }
+
+        function createProgressBar(label, value, colorClass) {
+            return `
+                <div class="flex items-center justify-between text-[11px] mb-1">
+                    <span class="text-slate-600 font-medium">${label}</span>
+                    <span class="font-bold text-slate-700">${value.toFixed(0)}</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-1.5 mb-3">
+                    <div class="${colorClass} h-1.5 rounded-full transition-all duration-300" style="width: ${value}%"></div>
+                </div>
+            `;
+        }
+
+        function renderList(data) {
+            const container = document.getElementById('results-list');
+            container.innerHTML = '';
+
+            const valid = data.filter(d => !d.isDisqualified);
+
+            if (valid.length === 0) {
+                container.innerHTML = `
+                    <div class="p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
+                        <strong>No results found.</strong> Your constraints are too tight. Increase target rent, commute time or lower budget priority.
+                    </div>`;
+                return;
+            }
+
+            // Use the shared sorting function
+            const listData = getSortedData(valid);
+
+            listData.slice(0, 10).forEach((sub, idx) => {
+                const isTop = idx === 0;
+                const isSelected = sub.id === selectedSuburbId;
+
+                const baseClasses = "p-4 rounded-xl border transition-all cursor-pointer shadow-sm hover:shadow-md";
+                const focusClasses = isSelected ? "ring-2 ring-blue-500 bg-blue-50/50" : (isTop ? "bg-slate-50 border-blue-200" : "bg-white border-slate-100");
+
+                const div = document.createElement('div');
+                div.className = `${baseClasses} ${focusClasses}`;
+                div.onclick = () => window.toggleSuburb(sub.id);
+
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-2 pointer-events-none">
+                        <div class="font-bold text-slate-800 flex items-center gap-2">
+                            ${idx + 1}. ${sub.name}
+                            ${isTop ? '<span class="text-[10px] uppercase bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">Top Pick</span>' : ''}
+                        </div>
+                        <div class="text-lg font-bold ${isTop || isSelected ? 'text-blue-700' : 'text-slate-600'}">
+                            ${sub.finalScore.toFixed(0)} <span class="text-xs font-normal">pts</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-y-2 text-xs text-slate-600 pointer-events-none mb-1">
+                        <div class="flex items-center gap-1"><span class="font-medium text-slate-400">&bull;</span> Rent: $${sub.rent}/wk</div>
+                        <div class="flex items-center gap-1"><span class="font-medium text-slate-400">&bull;</span> Time: ${sub.commuteTime}m</div>
+                        <div class="flex items-center gap-1"><span class="font-medium text-slate-400">&bull;</span> Line: ${sub.line}</div>
+                        <div class="flex items-center gap-1"><span class="font-medium text-slate-400">&bull;</span> Safety: ${sub.safety}/100</div>
+                    </div>
+                `;
+
+                if (isSelected) {
+                    const breakdown = document.createElement('div');
+                    breakdown.className = "mt-4 pt-4 border-t border-slate-200 pointer-events-none bg-white p-3 rounded-lg border shadow-inner";
+                    breakdown.innerHTML = `
+                        <div class="text-xs font-bold text-slate-800 mb-3 uppercase tracking-wide">Scoring Breakdown</div>
+                        ${createProgressBar('Affordability', sub.b_score, 'bg-emerald-500')}
+                        ${createProgressBar('Transit Speed', sub.c_score, 'bg-blue-500')}
+                        ${createProgressBar('Safety Rating', sub.s_score, 'bg-indigo-500')}
+                        ${createProgressBar('Vibe/Night life', sub.v_score, 'bg-pink-500')}
+                    `;
+                    div.appendChild(breakdown);
+                }
+
+                container.appendChild(div);
+            });
+        }
+
+        function renderMap(data) {
+            const uniKey = document.getElementById('centroid').value;
+            const centroid = universities[uniKey];
+
+            const qualified = data.filter(d => !d.isDisqualified);
+            const disqualified = data.filter(d => d.isDisqualified);
+
+            const traceCenter = {
+                type: 'scattermapbox',
+                lat: [centroid.lat],
+                lon: [centroid.lon],
+                mode: 'markers+text',
+                marker: { size: 16, color: '#2563eb', symbol: 'star' },
+                text: [centroid.name],
+                textposition: 'top center',
+                hoverinfo: 'text',
+                name: 'Target Area'
+            };
+
+            const traceValid = {
+                type: 'scattermapbox',
+                lat: qualified.map(d => d.lat),
+                lon: qualified.map(d => d.lon),
+                mode: 'markers',
+                marker: {
+                    size: qualified.map(d => d.id === selectedSuburbId ? 22 : Math.max(10, d.finalScore / 3)),
+                    color: qualified.map(d => d.id === selectedSuburbId ? '#f59e0b' : '#059669'),
+                    opacity: qualified.map(d => selectedSuburbId && d.id !== selectedSuburbId ? 0.3 : 0.8),
+                    line: {
+                        color: 'white',
+                        width: qualified.map(d => d.id === selectedSuburbId ? 3 : 0)
+                    }
+                },
+                text: qualified.map(d => `<b>${d.name}</b><br>Score: ${d.finalScore.toFixed(0)}<br>Rent: $${d.rent}<br>Commute: ${d.commuteTime}m`),
+                hoverinfo: 'text',
+                name: 'Matches'
+            };
+
+            const traceInvalid = {
+                type: 'scattermapbox',
+                lat: disqualified.map(d => d.lat),
+                lon: disqualified.map(d => d.lon),
+                mode: 'markers',
+                marker: {
+                    size: 8,
+                    color: '#ef4444',
+                    opacity: 0.5
+                },
+                text: disqualified.map(d => `<b>${d.name}</b><br>Eliminated (Failed to meet constraints)`),
+                hoverinfo: 'text',
+                name: 'Eliminated'
+            };
+
+            const layout = {
+                mapbox: {
+                    style: "carto-positron",
+                    center: { lat: -33.87, lon: 151.13 },
+                    zoom: 10.5
+                },
+                margin: { r: 0, t: 0, b: 0, l: 0 },
+                showlegend: false,
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                transition: { duration: 300 }
+            };
+
+            Plotly.react('map-container', [traceInvalid, traceValid, traceCenter], layout, { responsive: true, displayModeBar: false });
+        }
+
+        function renderChart(data) {
+            let valid = data.filter(d => !d.isDisqualified);
+            const ctx = document.getElementById('radarChart').getContext('2d');
+
+            if (valid.length === 0) return;
+
+            // Apply the user's sorting preference to the visual chart data as well
+            valid = getSortedData(valid);
+
+            let chartData = [];
+            const titleEl = document.getElementById('radar-title');
+
+            // Map the dropdown value to a human readable chart title
+            const sortBy = document.getElementById('sort-metric').value;
+            const sortTitles = {
+                'score': 'Top 3 Overall Matches',
+                'rent': 'Top 3 by Cheapest Rent',
+                'time': 'Top 3 by Fastest Commute',
+                'safety': 'Top 3 by Safety Rating',
+                'vibe': 'Top 3 by Vibe/Night life'
+            };
+            const sortLabel = sortTitles[sortBy];
+
+            if (selectedSuburbId) {
+                const selected = valid.find(s => s.id === selectedSuburbId);
+                const first = valid[0];
+
+                chartData = [first];
+                if (selected && selected.id !== first.id) {
+                    chartData.push(selected);
+                    titleEl.textContent = `Comparison against #1 (${sortLabel})`;
+                } else {
+                    titleEl.textContent = `Detailed View (${sortLabel})`;
+                }
+            } else {
+                chartData = valid.slice(0, 3);
+                titleEl.textContent = "Trade-off Analysis (" + sortLabel + ")";
+            }
+
+            const colors = [
+                { bg: 'rgba(37, 99, 235, 0.2)', border: 'rgb(37, 99, 235)' }, // Blue (Top Match)
+                { bg: 'rgba(245, 158, 11, 0.2)', border: 'rgb(245, 158, 11)' }, // Amber (Selected or 2nd Match)
+                { bg: 'rgba(5, 150, 105, 0.2)', border: 'rgb(5, 150, 105)' } // Emerald (3rd Match)
+            ];
+
+            const datasets = chartData.map((sub, idx) => {
+                let colorIdx = idx % 3;
+                if (selectedSuburbId && sub.id === selectedSuburbId && sub.id !== valid[0].id) {
+                    colorIdx = 1; // Always make the explicitly selected second item amber
+                }
+
+                return {
+                    label: sub.name + (sub.id === selectedSuburbId ? ' (Selected)' : (idx === 0 ? ' (#1 Match)' : '')),
+                    data: [sub.b_score, sub.c_score, sub.s_score, sub.v_score],
+                    backgroundColor: colors[colorIdx].bg,
+                    borderColor: colors[colorIdx].border,
+                    pointBackgroundColor: colors[colorIdx].border,
+                    pointBorderColor: '#fff',
+                    borderWidth: sub.id === selectedSuburbId ? 3 : 2
+                };
+            });
+
+            if (radarChartInstance) {
+                radarChartInstance.data.datasets = datasets;
+                radarChartInstance.update();
+            } else {
+                radarChartInstance = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Affordability', 'Commute Speed', 'Safety', 'Vibe/Night life'],
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                min: 0,
+                                max: 100,
+                                beginAtZero: true,
+                                angleLines: { color: 'rgba(0, 0, 0, 0.05)' },
+                                grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                                pointLabels: {
+                                    font: { family: 'Inter', size: 12, weight: '600' },
+                                    color: '#475569'
+                                },
+                                ticks: {
+                                    display: false,
+                                    stepSize: 20
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { family: 'Inter', size: 12 },
+                                    padding: 20
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                padding: 12,
+                                titleFont: { family: 'Inter', size: 14 },
+                                bodyFont: { family: 'Inter', size: 13 },
+                                callbacks: {
+                                    label: function (context) {
+                                        return context.dataset.label + ': ' + Math.round(context.raw) + '/100';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateApp() {
+            syncLabels();
+            const processedData = processData();
+
+            // Validate that if we changed filters, the selected element might be disqualified
+            // if so, reset the selection.
+            if (selectedSuburbId) {
+                const stillValid = processedData.find(d => d.id === selectedSuburbId && !d.isDisqualified);
+                if (!stillValid) selectedSuburbId = null;
+            }
+
+            renderMap(processedData);
+            renderList(processedData);
+            renderChart(processedData);
+        }
+
+        const inputs = ['centroid', 'param-target-rent', 'param-time', 'sort-metric'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateApp);
+        });
+
+        // Initialize segmented controls
+        document.querySelectorAll('.segmented-control button').forEach(btn => {
+            btn.addEventListener('click', function () {
+                // Remove active class from sibling buttons
+                const parent = this.closest('.segmented-control');
+                parent.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+
+                // Add active class to clicked button
+                this.classList.add('active');
+
+                // Trigger global update
+                updateApp();
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            if (radarChartInstance) radarChartInstance.resize();
+            const mapContainer = document.getElementById('map-container');
+            if (mapContainer && Plotly.Plots && Plotly.Plots.resize) {
+                Plotly.Plots.resize(mapContainer);
+            }
+        });
+
+        updateApp();
+
+    </script>
+</body>
+
+</html>

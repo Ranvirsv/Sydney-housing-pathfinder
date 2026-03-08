@@ -20,14 +20,16 @@
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px;
-            max-height: 400px;
+            height: 300px;
         }
 
-        @media (min-width: 768px) {
+        @media (min-width: 640px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        @media (min-width: 1024px) {
             .chart-container {
                 height: 400px;
             }
@@ -123,11 +125,11 @@
 
 <body class="antialiased p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div class="max-w-7xl mx-auto flex flex-col gap-4 sm:gap-6">
 
-        <header class="glass-card p-6 md:p-8">
+        <header class="glass-card p-5 sm:p-6 md:p-8 order-1">
             <div
-                class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-4 mb-4">
+                class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-4 mb-4 gap-4 md:gap-0">
                 <div>
                     <h1 class="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">Sydney Housing Algorithm
                     </h1>
@@ -143,7 +145,176 @@
                     Live Calculation Active
                 </div>
             </div>
+        </header>
 
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 order-3 md:order-3">
+
+            <div class="lg:col-span-4 glass-card p-5 lg:p-6 flex flex-col h-full border-t-4 border-t-blue-600">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-4">
+                    <h2 class="text-lg font-bold text-slate-800">Input Parameters</h2>
+                    <button id="mobile-filter-toggle"
+                        class="lg:hidden text-sm bg-blue-50 text-blue-600 font-semibold px-3 py-1.5 rounded-md hover:bg-blue-100 transition-colors">
+                        Show Filters
+                    </button>
+                </div>
+
+                <div id="filter-content" class="hidden lg:block space-y-5 flex-grow">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">University Location
+                            (Centroid)</label>
+                        <select id="centroid"
+                            class="w-full bg-slate-50 border border-slate-300 text-slate-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium">
+                            <option value="usyd">USYD / UTS (Central Station)</option>
+                            <option value="unsw">UNSW (Randwick / Kingsford)</option>
+                            <option value="macquarie">Macquarie University</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-semibold text-slate-700">Target Ideal Rent (Per Week)</label>
+                            <span id="val-target-rent"
+                                class="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">$350</span>
+                        </div>
+                        <input type="range" id="param-target-rent" min="200" max="600" value="350" step="10">
+                        <div class="text-[10px] text-slate-400 text-right">Rent scoring metric</div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-semibold text-slate-700">Max Commute Time Limit</label>
+                            <span id="val-time"
+                                class="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">45 mins</span>
+                        </div>
+                        <input type="range" id="param-time" min="15" max="60" value="45" step="5">
+                        <div class="text-[10px] text-slate-400 text-right">Absolute cutoff threshold</div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 space-y-5">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Priority Weights</label>
+
+                        <div>
+                            <div
+                                class="text-[11px] sm:text-xs font-semibold text-slate-700 mb-1.5 line-clamp-1 text-ellipsis overflow-hidden whitespace-nowrap">
+                                Budget Strictness</div>
+                            <div class="segmented-control" data-param="w-budget">
+                                <button data-val="0">Ignored</button>
+                                <button data-val="40">Low</button>
+                                <button data-val="80" class="active">High</button>
+                                <button data-val="100">Dealbreaker</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div
+                                class="text-[11px] sm:text-xs font-semibold text-slate-700 mb-1.5 line-clamp-1 text-ellipsis overflow-hidden whitespace-nowrap">
+                                Commute Speed</div>
+                            <div class="segmented-control" data-param="w-commute">
+                                <button data-val="0">Ignored</button>
+                                <button data-val="40">Low</button>
+                                <button data-val="80" class="active">High</button>
+                                <button data-val="100">Dealbreaker</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div
+                                class="text-[11px] sm:text-xs font-semibold text-slate-700 mb-1.5 line-clamp-1 text-ellipsis overflow-hidden whitespace-nowrap">
+                                Safety / Night Travel</div>
+                            <div class="segmented-control" data-param="w-safety">
+                                <button data-val="0">Ignored</button>
+                                <button data-val="40">Low</button>
+                                <button data-val="80">High</button>
+                                <button data-val="100" class="active">Dealbreaker</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div
+                                class="text-[11px] sm:text-xs font-semibold text-slate-700 mb-1.5 line-clamp-1 text-ellipsis overflow-hidden whitespace-nowrap">
+                                Vibe / Culture</div>
+                            <div class="segmented-control" data-param="w-vibe">
+                                <button data-val="0">Ignored</button>
+                                <button data-val="40" class="active">Low</button>
+                                <button data-val="80">High</button>
+                                <button data-val="100">Dealbreaker</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="lg:col-span-8 glass-card p-4 sm:p-6 flex flex-col h-[400px] lg:h-auto min-h-[400px] lg:min-h-[500px]">
+                <div
+                    class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 border-b border-slate-100 pb-2 gap-2">
+                    <h2 class="text-lg font-bold text-slate-800">Spatial Proximity Visualization</h2>
+                    <span
+                        class="text-[10px] uppercase tracking-wider font-bold bg-slate-800 text-white px-2.5 py-1 rounded-full shadow-sm w-max">
+                        WebGL Active
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mb-4 leading-relaxed mt-2">
+                    Visualizing geometric compliance based on current constraint variables. Nodes in <span
+                        class="font-semibold text-emerald-600">green</span> satisfy the minimum gating criteria, scaling
+                    geometrically relative to their aggregate score. Nodes in <span
+                        class="font-semibold text-red-500">red</span> indicate categorical failures. <strong>Click any
+                        listing in the index below to isolate its geospatial coordinate.</strong>
+                </p>
+                <div id="map-container" class="w-full flex-grow rounded-lg overflow-hidden border border-slate-200"
+                    style="background-color: #e2e8f0;"></div>
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 order-4 md:order-4">
+
+            <div class="glass-card p-4 sm:p-6 flex flex-col max-h-[500px]">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 border-b border-slate-100 pb-3 gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Optimized Suburb Index</h2>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                            <strong class="text-blue-600 font-medium hover:underline cursor-pointer">Select a
+                                row</strong> to generate a granular performance breakdown.
+                        </p>
+                    </div>
+                    <div class="w-full sm:w-auto">
+                        <select id="sort-metric"
+                            class="bg-slate-50 border border-slate-300 text-slate-700 rounded-md py-1.5 px-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs font-medium">
+                            <option value="score">Sort by: Best Match</option>
+                            <option value="rent">Sort by: Cheapest Rent</option>
+                            <option value="time">Sort by: Fastest Commute</option>
+                            <option value="safety">Sort by: Safest</option>
+                            <option value="vibe">Sort by: Best Vibe/Night life</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="results-list" class="flex-grow overflow-y-auto scroller space-y-3 pr-2 pb-2">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div class="glass-card p-4 sm:p-6 flex flex-col">
+                <div class="border-b border-slate-100 pb-2 mb-4">
+                    <h2 class="text-lg font-bold text-slate-800" id="radar-title">Multivariate Trade-off Analysis (Top
+                        3)</h2>
+                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Comparative visualization of composite metrics across the highest-yielding nodes. Expanding the
+                        geometric footprint signifies greater adherence to ideal theoretical baselines.
+                    </p>
+                </div>
+                <div class="flex-grow flex items-center justify-center w-full overflow-hidden">
+                    <div class="chart-container w-full">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Strategy Section -->
+        <section class="glass-card p-5 sm:p-6 md:p-8 order-5 md:order-2">
             <div class="mb-5">
                 <h2 class="text-[1.1rem] font-semibold text-slate-800 flex items-center gap-2">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,159 +377,7 @@
                         on asynchronous bus transfers to maintain commute integrity.</div>
                 </div>
             </div>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-            <div class="lg:col-span-4 glass-card p-6 flex flex-col h-full border-t-4 border-t-blue-600">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 mb-4">Input Parameters
-                    </h2>
-                </div>
-
-                <div class="space-y-5 flex-grow">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">University Location
-                            (Centroid)</label>
-                        <select id="centroid"
-                            class="w-full bg-slate-50 border border-slate-300 text-slate-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium">
-                            <option value="usyd">USYD / UTS (Central Station)</option>
-                            <option value="unsw">UNSW (Randwick / Kingsford)</option>
-                            <option value="macquarie">Macquarie University</option>
-                        </select>
-                    </div>
-
-                    <div class="pt-2 border-t border-slate-100">
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-sm font-semibold text-slate-700">Target Ideal Rent (Per Week)</label>
-                            <span id="val-target-rent"
-                                class="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">$350</span>
-                        </div>
-                        <input type="range" id="param-target-rent" min="200" max="600" value="350" step="10">
-                        <div class="text-[10px] text-slate-400 text-right">Rent scoring metric</div>
-                    </div>
-
-                    <div class="pt-2 border-t border-slate-100">
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-sm font-semibold text-slate-700">Max Commute Time Limit</label>
-                            <span id="val-time"
-                                class="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">45 mins</span>
-                        </div>
-                        <input type="range" id="param-time" min="15" max="60" value="45" step="5">
-                        <div class="text-[10px] text-slate-400 text-right">Absolute cutoff threshold</div>
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-100 space-y-5">
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Priority Weights</label>
-
-                        <div>
-                            <div class="text-xs font-semibold text-slate-700 mb-1.5">Budget Strictness</div>
-                            <div class="segmented-control" data-param="w-budget">
-                                <button data-val="0">Ignored</button>
-                                <button data-val="40">Low</button>
-                                <button data-val="80" class="active">High</button>
-                                <button data-val="100">Dealbreaker</button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-xs font-semibold text-slate-700 mb-1.5">Commute Speed</div>
-                            <div class="segmented-control" data-param="w-commute">
-                                <button data-val="0">Ignored</button>
-                                <button data-val="40">Low</button>
-                                <button data-val="80" class="active">High</button>
-                                <button data-val="100">Dealbreaker</button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-xs font-semibold text-slate-700 mb-1.5">Safety / Late Night Travel</div>
-                            <div class="segmented-control" data-param="w-safety">
-                                <button data-val="0">Ignored</button>
-                                <button data-val="40">Low</button>
-                                <button data-val="80">High</button>
-                                <button data-val="100" class="active">Dealbreaker</button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-xs font-semibold text-slate-700 mb-1.5">Vibe / Culture</div>
-                            <div class="segmented-control" data-param="w-vibe">
-                                <button data-val="0">Ignored</button>
-                                <button data-val="40" class="active">Low</button>
-                                <button data-val="80">High</button>
-                                <button data-val="100">Dealbreaker</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-8 glass-card p-6 flex flex-col h-[500px] lg:h-auto min-h-[500px]">
-                <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
-                    <h2 class="text-lg font-bold text-slate-800">Spatial Proximity Visualization</h2>
-                    <span
-                        class="text-[10px] uppercase tracking-wider font-bold bg-slate-800 text-white px-2.5 py-1 rounded-full shadow-sm">
-                        WebGL Active
-                    </span>
-                </div>
-                <p class="text-xs text-slate-500 mb-4 leading-relaxed mt-2">
-                    Visualizing geometric compliance based on current constraint variables. Nodes in <span
-                        class="font-semibold text-emerald-600">green</span> satisfy the minimum gating criteria, scaling
-                    geometrically relative to their aggregate score. Nodes in <span
-                        class="font-semibold text-red-500">red</span> indicate categorical failures. <strong>Click any
-                        listing in the index below to isolate its geospatial coordinate.</strong>
-                </p>
-                <div id="map-container" class="w-full flex-grow rounded-lg overflow-hidden border border-slate-200"
-                    style="background-color: #e2e8f0;"></div>
-            </div>
-
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            <div class="glass-card p-6 flex flex-col max-h-[500px]">
-                <div class="flex justify-between items-end mb-4 border-b border-slate-100 pb-2">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800">Optimized Suburb Index</h2>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-                            <strong class="text-blue-600 font-medium hover:underline cursor-pointer">Select a
-                                row</strong> to generate a granular performance breakdown.
-                        </p>
-                    </div>
-                    <div>
-                        <select id="sort-metric"
-                            class="bg-slate-50 border border-slate-300 text-slate-700 rounded-md py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs font-medium">
-                            <option value="score">Sort by: Best Match</option>
-                            <option value="rent">Sort by: Cheapest Rent</option>
-                            <option value="time">Sort by: Fastest Commute</option>
-                            <option value="safety">Sort by: Safest</option>
-                            <option value="vibe">Sort by: Best Vibe/Night life</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="results-list" class="flex-grow overflow-y-auto scroller space-y-3 pr-2 pb-2">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <div class="glass-card p-6 flex flex-col">
-                <div class="border-b border-slate-100 pb-2 mb-4">
-                    <h2 class="text-lg font-bold text-slate-800" id="radar-title">Multivariate Trade-off Analysis (Top
-                        3)</h2>
-                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-                        Comparative visualization of composite metrics across the highest-yielding nodes. Expanding the
-                        geometric footprint signifies greater adherence to ideal theoretical baselines.
-                    </p>
-                </div>
-                <div class="flex-grow flex items-center justify-center">
-                    <div class="chart-container">
-                        <canvas id="radarChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+        </section>
     </div>
 
     <script>
@@ -652,7 +671,7 @@
                 mapbox: {
                     style: "carto-positron",
                     center: { lat: -33.87, lon: 151.13 },
-                    zoom: 10.5
+                    zoom: window.innerWidth < 768 ? 9.8 : 10.5
                 },
                 margin: { r: 0, t: 0, b: 0, l: 0 },
                 showlegend: false,
@@ -817,6 +836,25 @@
                 updateApp();
             });
         });
+
+        // Mobile Filter Toggle Logic
+        const filterToggle = document.getElementById('mobile-filter-toggle');
+        const filterContent = document.getElementById('filter-content');
+
+        if (filterToggle && filterContent) {
+            filterToggle.addEventListener('click', () => {
+                filterContent.classList.toggle('hidden');
+                if (filterContent.classList.contains('hidden')) {
+                    filterToggle.textContent = 'Show Filters';
+                    filterToggle.classList.replace('bg-slate-100', 'bg-blue-50');
+                    filterToggle.classList.replace('text-slate-700', 'text-blue-600');
+                } else {
+                    filterToggle.textContent = 'Hide Filters';
+                    filterToggle.classList.replace('bg-blue-50', 'bg-slate-100');
+                    filterToggle.classList.replace('text-blue-600', 'text-slate-700');
+                }
+            });
+        }
 
         window.addEventListener('resize', () => {
             if (radarChartInstance) radarChartInstance.resize();
